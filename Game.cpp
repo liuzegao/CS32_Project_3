@@ -197,7 +197,7 @@ bool GameImpl::completed(int& winner) const
                 }
                 //Check left up
                 k = 1;
-                while( i-k > 0 && j+k > m_Scaffold->levels() &&  k < m_N )
+                while( i-k > 0 && j+k <= m_Scaffold->levels() &&  k < m_N )
                 {
                     if(m_Scaffold->checkerAt(i,j) == m_Scaffold->checkerAt(i-k,j+k))
                         k++;
@@ -266,10 +266,12 @@ bool GameImpl::takeTurn()
             cout << "Winner is RED" << endl;
         if (m_winner == BLACK)
             cout << "Winner is BLACK" << endl;
+	
         return false;
     }
     else
     {
+        //First time, m_turn is always red
         if(m_turn == RED)
         {   //exam:Can I do this *m_Scaffold?
             m_Scaffold->makeMove(m_Redplayer->chooseMove(*m_Scaffold, m_N, RED),RED);

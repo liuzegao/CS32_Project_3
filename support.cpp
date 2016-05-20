@@ -26,10 +26,10 @@ int opponentcolor(int colorofsmartplayer)
 }
 
 
-int findlargest(int n_branch[], bool bool_branch[],int n)
+int findlargest(vector<int> n_branch, vector<bool> bool_branch,int n)
 {
     int large = 0;
-    //Put the first value in branch into small;
+    //Put the first value in branch into large;
     for(int i = 0; i<n; i++)
         if(bool_branch[i])
         {   large = n_branch[i];
@@ -46,7 +46,7 @@ int findlargest(int n_branch[], bool bool_branch[],int n)
     return large;
 }
 
-int findsmallest(int n_branch[], bool bool_branch[],int n)
+int findsmallest(vector<int> n_branch, vector<bool> bool_branch,int n)
 {
     int small = 0;
     //Put the first value in branch into small;
@@ -69,26 +69,49 @@ int findsmallest(int n_branch[], bool bool_branch[],int n)
 //Minimax algorithme which returns the evaluations numbers
 int minimax(Scaffold& copyS, int colorofsmartplayer,int m_N,int m_step)
 {
-    copyS.display();
+    //cerr << '#'<< m_step << endl;
+    //copyS.display();
     
     //Find which color is the opponent color
     int opponent = opponentcolor(colorofsmartplayer);
+    
+    //Find the color of the current move
+    int currentcolor;
+    //Determine what's the color of the current player
+    if(m_step%2 == 1) //Odd number, turn of opponent
+        currentcolor = opponent;
+    else
+        currentcolor = colorofsmartplayer;
+    
     
     //-2 no winner, -1 the game wins, 0 red wins, 1 blackwins
     int m_winner;
     
     
-    //Stopping condition
+///////////////////////////////////////////////////////////////////////
+//Stopping condition
+///////////////////////////////////////////////////////////////////////
     if (completed(&copyS, m_winner, m_N))
     {   if(m_winner == colorofsmartplayer)
+        {
+        //exam:delete
+        //cerr << "Evaluation is for this step is  " << INT_MAX-m_step << endl;
         return INT_MAX-m_step;
+        }
         
-    else if(m_winner == opponent)
-        
+        if(m_winner == opponent)
+        {
+        //exam:delete
+        //cerr << "Evaluation is for this step is  " << INT_MIN+m_step << endl;
         return INT_MIN+m_step;
-    else if(m_winner == -1)
+        }
+        if(m_winner == -1)
         //Return m_step because more step is better since I do not make mistake but the opponent might make one
+        {
+        //exam:delete
+        //cerr << "Evaluation is for this step is  " << m_step<< endl;
         return m_step;
+        }
     }
     
     
@@ -98,20 +121,16 @@ int minimax(Scaffold& copyS, int colorofsmartplayer,int m_N,int m_step)
 ///////////////////////////////////////////////////////////////////////
     
 
-    //Find the color of the current move
-    int currentcolor;
-    //Determine what's the color of the current player
-    if(m_step%2 == 1) //Odd number, turn of smartplayer
-        currentcolor = opponent;
-    else
-        currentcolor = colorofsmartplayer;
+	int temp = copyS.cols();
+    vector<int> n_branch;
+	n_branch.resize(temp);
+	vector<bool> bool_branch;
+	bool_branch.resize(temp);
 
-    int n_branch[copyS.cols()];
-    bool bool_branch[copyS.cols()];
     
-    //Initialize the n_branch with 0
+    //Initialize the bool_branch with false
     for(int i=0;i< copyS.cols();i++)
-        n_branch[i] = false;
+        bool_branch[i] = false;
     
     //Rrecursion part
     for(int i = 0; i< copyS.cols(); i++)
@@ -120,7 +139,7 @@ int minimax(Scaffold& copyS, int colorofsmartplayer,int m_N,int m_step)
         {
             copyS.makeMove(i+1,currentcolor);
             n_branch[i] = minimax(copyS, colorofsmartplayer,m_N, m_step+1);
-            n_branch[i] = true;
+            bool_branch[i] = true;
             copyS.undoMove();
         }
     }
@@ -128,13 +147,11 @@ int minimax(Scaffold& copyS, int colorofsmartplayer,int m_N,int m_step)
     
     //Find the largest value in the vector n_branch, (which is evalualtion of all the moves)
     if( currentcolor == colorofsmartplayer)
-    {
         return findlargest(n_branch,  bool_branch, copyS.cols());
-    }
     else
         return findsmallest(n_branch,  bool_branch, copyS.cols());
 
-    
+    //exam:Do I need this?
     return 0;
 }
 
@@ -145,7 +162,7 @@ bool completed(Scaffold* m_Scaffold, int& winner, int m_N)
     for (int i = 1; i <= m_Scaffold->cols(); i++)
         for (int j=1; j<= m_Scaffold->levels(); j++)
             //Do the check only when there is a checker
-            if(m_Scaffold->checkerAt(i,j)!=  -1)
+            if(m_Scaffold->checkerAt(i,j)!=  VACANT)
             {
                 //For all condition
                 //check up
@@ -293,7 +310,7 @@ bool completed(Scaffold* m_Scaffold, int& winner, int m_N)
                 }
                 //Check left up
                 k = 1;
-                while( i-k > 0 && j+k > m_Scaffold->levels() &&  k < m_N )
+                while( i-k > 0 && j+k <= m_Scaffold->levels() &&  k < m_N )
                 {
                     if(m_Scaffold->checkerAt(i,j) == m_Scaffold->checkerAt(i-k,j+k))
                         k++;

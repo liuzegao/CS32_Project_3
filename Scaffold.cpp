@@ -9,7 +9,6 @@ class ScaffoldImpl
 {
 public:
     ScaffoldImpl(int nColumns, int nLevels);
-    ~ScaffoldImpl();
     int cols() const;
     int levels() const;
     int numberEmpty() const;
@@ -23,9 +22,8 @@ private:
     int m_cols_d;
     int m_lvls_d;
     //-1 Vacnt, 0 Red, 1 Black.
-    int** m_con; //condition of positions
+    vector<vector<int>> m_con; //condition of positions
     
-    char** m_draw; //draw condition of positions
     
     
     stack<pair<int,int>> track;
@@ -35,53 +33,20 @@ ScaffoldImpl::ScaffoldImpl(int nColumns, int nLevels)
 {
     m_cols = nColumns;
     m_lvls = nLevels;
+    m_con.resize(nLevels);
+    for(int i = 0; i< nLevels; i++)
+        m_con[i].resize(nColumns);
     
-    //Creat a matrx to record the condition of the position
-    m_con = new int*[m_cols];
-    for (int i = 0; i < m_cols; i++)
-        m_con[i] = new int[m_lvls];
     
     //Initialize all the position with -1 meaning nothing is in the positions
     for (int i = 0; i < m_cols; i++)
         for (int j=0; j< m_lvls; j++)
-            m_con[i][j] = -1;
+            m_con[j][i] = -1;
     
-    //What the program atually needs to draw
-    m_cols_d = 2*m_cols+1;
-    m_lvls_d = m_lvls+1;
-    
-    //reat a matrx to record the drawing of the position
-    m_draw = new char*[m_cols_d];
-    for (int i = 0; i < m_cols_d; i++)
-        m_draw[i] = new char[m_lvls_d];
-    
-    
-    //Initialize all the position with -1 meaning nothing is in the positions
-    for (int i = 0; i < m_cols_d; i++)
-        for (int j=0; j< m_lvls_d; j++)
-        {
-            //odd
-            if (( i%2 == 1 ) && (j == m_lvls_d-1))
-                m_draw[i][j] = '-';
-            else if ( i%2 == 0 )
-                {if (j == m_lvls_d-1)
-                    m_draw[i][j] = '+';
-                else
-                    m_draw[i][j] = '|';
-                }
-            else
-             m_draw[i][j] = ' ';
-            
-        }
         
 }
 
-ScaffoldImpl::~ScaffoldImpl()
-{
-    //exam:is it okay to delete the 2d like this?
-    delete m_con;
-    delete m_draw;
-}
+
 
 int ScaffoldImpl::cols() const
 {
@@ -101,7 +66,7 @@ int ScaffoldImpl::numberEmpty() const
     //search through all the positions and see if any is -1
     for (int i = 0; i < m_cols; i++)
         for (int j=0; j< m_lvls; j++)
-            if(m_con[i][j] == -1)
+            if(m_con[j][i] == -1)
                 n++;
 
     //return n
@@ -113,14 +78,14 @@ int ScaffoldImpl::checkerAt(int column, int level) const
 {
     //Convert the column to column -1 and convert level upsdie down
     column = column -1;
-    level = m_lvls - level;
+    level = level-1;
     
     
-    if(m_con[column][level] == -1)
+    if(m_con[level][column] == -1)
             return VACANT;
-    else if(m_con[column][level] == 0)
+    else if(m_con[level][column] == 0)
             return RED;
-    else if(m_con[column][level] == 1)
+    else if(m_con[level][column] == 1)
             return BLACK;
     
     
@@ -130,29 +95,23 @@ int ScaffoldImpl::checkerAt(int column, int level) const
 
 void ScaffoldImpl::display() const
 {
-    //exam: make the new m_con into the m_draw;
-    for (int j=0; j< m_lvls_d; j++)
-        for (int i = 0; i < m_cols_d; i++)
-            if (( i%2 == 1 ) && (j < m_lvls_d-1))
-            {
-                if (m_con[(i-1)/2][j] == -1)
-                    m_draw[i][j] = ' ';
-                if (m_con[(i-1)/2][j] ==  0 )
-                    m_draw[i][j] = 'R';
-                if (m_con[(i-1)/2][j] ==  1 )
-                    m_draw[i][j] = 'B';
-                
-                    
-            }
-    
-            
-        for (int j=0; j< m_lvls_d; j++)
-                for (int i = 0; i < m_cols_d; i++)
-        { if (i == m_cols_d-1)
-            cout << m_draw[i][j] << endl;
-        else
-            cout << m_draw[i][j];
-        }
+    for(int lev = m_lvls -1;lev>= 0 ; lev--)
+    {    for(int col = 0; col < m_cols; col++)
+
+    {
+        cout << '|';
+        if(m_con[lev][col] == RED)
+            cout << 'R';
+        if(m_con[lev][col]== BLACK)
+            cout << 'B';
+        if(m_con[lev][col]== VACANT)
+            cout << ' ';
+    }
+    cout<<'|'<<endl;
+    }
+    for(int col = 0; col< m_cols; col++)
+        cout<<"+-";
+    cout << "+" << endl;
 }
 
 
@@ -171,15 +130,15 @@ bool ScaffoldImpl::makeMove(int column, int color)
     if(color != RED && color != BLACK)
         return false;
     
-    for( int i = levels()-1; i >= 0; i--)
+    for( int i = 0; i < m_lvls; i++)
         //exam:???
-        if(m_con[(column-1)][i] == VACANT)
+        if(m_con[i][(column-1)] == VACANT)
         {
-           m_con[(column-1)][i] = color;
+           m_con[i][(column-1)] = color;
             
             
             //p1.first == column-1, p1.second == i
-            pair<int,int> p1(column-1,i);
+            pair<int,int> p1(i,column-1);
             track.push(p1);
             return true;
         }
@@ -196,7 +155,7 @@ int ScaffoldImpl::undoMove()
     //Pop it after taking it
     track.pop();
     //Change it to -1 meaning no checker in this position
-    m_con[temp.first][temp.second] = -1;
+    m_con[temp.first][temp.second] = VACANT;
     //Return the column number 
     return temp.first;
 }

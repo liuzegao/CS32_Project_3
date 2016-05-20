@@ -56,9 +56,14 @@ int SmartPlayerImpl::chooseMove(const Scaffold& s, int N, int color)
 {
     //Copy the Scaffold so that you can move.
     Scaffold copyS = s;
-    
-    int n_branch[copyS.cols()];
-    bool bool_branch[copyS.cols()];
+    Scaffold copyS2 = s;
+
+	int temp = copyS.cols();
+	vector<int> n_branch;
+	n_branch.resize(temp);
+	vector<bool> bool_branch;
+	bool_branch.resize(temp);
+
     //Initialize the n_branch with 0
     for(int i=0;i< copyS.cols();i++)
         n_branch[i] = false;
@@ -69,10 +74,15 @@ int SmartPlayerImpl::chooseMove(const Scaffold& s, int N, int color)
         {
             copyS.makeMove(i+1,color);
             n_branch[i] = minimax(copyS, color,N,1);
-            n_branch[i] = true;
+            bool_branch[i] = true;
             copyS.undoMove();
+           
         }
+         copyS = copyS2;
     }
+    
+
+  
     
     int largest = findlargest(n_branch,  bool_branch, copyS.cols());
     
@@ -82,9 +92,13 @@ int SmartPlayerImpl::chooseMove(const Scaffold& s, int N, int color)
     for(int i = 0; i< copyS.cols(); i++)
         if(bool_branch[i])
         {   if (largest ==n_branch[i])
-                position = i+1;
-                break;
+                { position = i+1;
+                    break;
+                }
         }
+    
+    //exam:delete
+    //cerr << "Choice of Smartplayer is " << position << endl;
     
     //return the position
     return position;

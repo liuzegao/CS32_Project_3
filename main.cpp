@@ -37,7 +37,7 @@ int main()
 {
     HumanPlayer bp("Homer");
     SmartPlayer hp("Marge");
-    Game g(3, 4, 3, &bp, &hp);
+    Game g(7, 6, 4, &bp, &hp);
     g.play();
-    
+
 }
